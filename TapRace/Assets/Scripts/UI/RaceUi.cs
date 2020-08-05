@@ -17,7 +17,7 @@ public class RaceUi : MonoBehaviour
 
     public void StartGame()
     {
-		RaceView.SetActive(true);
-        RaceLobbyView.SetActive(false);
+		RaceView.SetActive(false);
+        RaceLobbyView.SetActive(true);
     }
 }

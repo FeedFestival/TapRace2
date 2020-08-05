@@ -64,19 +64,71 @@ public class NetworkManager_NetworkController : NetworkManager
 
     public void JoinGame()
     {
-        SetIpAddress();
-        SetPort();
-        NetworkManager.singleton.StartClient();
-        //
-        NetworkDiscovery.StopBroadcast();
-        //
-        ShowConnectionPanel(false);
+        StartCoroutine(JoiningGame());
+    }
+
+    IEnumerator JoiningGame()
+    {
+        var ipAddress = IpInput.text;
+        var networkPort = Convert.ToInt32(PortInput.text);
+        byte error;
+
+        singleton.networkAddress = ipAddress;
+        singleton.networkPort = networkPort;
+
+        var networkClient = singleton.StartClient();
+
+        yield return new WaitForSeconds(1f);
+
+        //networkClient.Connect();
+
+        //short s = 1_034;
+        //var msg = new RegisterHostMessage();
+        //msg.gameName = "s";
+        //msg.comment = "test";
+
+        //networkClient.Send(s, msg);
+
+        //Debug.Log("Attempting Connection to: singleton.networkAddress = " + singleton.networkAddress + " , singleton.networkPort " + singleton.networkPort);
+
+        ////
+        //NetworkDiscovery.StopBroadcast();
+        ////
+        //ShowConnectionPanel(false);
+
+        //NetworkTransport.Connect(NetworkDiscovery.hostId, ipAddress, networkPort, 0, out error);
+
+        //Debug.Log(error);
+        //Debug.Log("AttemptConnect: " + NetworkDiscovery.hostId + ", " + ipAddress + ", " + networkPort);
+    }
+
+    //Detect when a client connects to the Server
+    public override void OnClientConnect(NetworkConnection connection)
+    {
+        Debug.Log("Connected: " + connection.connectionId);
+    }
+
+    //Detect when a client connects to the Server
+    public override void OnStopClient()
+    {
+        //Debug.Log("Not Connected: " + connection.connectionId);
+    }
+
+    public override void OnClientError(NetworkConnection connection, int errorCode)
+    {
+        Debug.Log("Not Connected: " + connection.connectionId + ", errorCode: " + errorCode);
+    }
+
+    //Detect when a client connects to the Server
+    public override void OnClientDisconnect(NetworkConnection connection)
+    {
+        Debug.Log("Not Connected: " + connection.connectionId);
     }
 
     public void DisconnectFromGame()
     {
         InfoText.text = "";
-        NetworkManager.singleton.StopHost();
+        singleton.StopHost();
         //
         ShowConnectionPanel(true);
     }
@@ -92,7 +144,8 @@ public class NetworkManager_NetworkController : NetworkManager
 
     public string GetIpAddress()
     {
-        return Network.player.ipAddress;
+        return "";
+        //return Network.player.ipAddress;
     }
 
     public void ResetPort()
@@ -114,9 +167,9 @@ public class NetworkManager_NetworkController : NetworkManager
 
         NetworkManager.singleton.StartHost();
         //
-        NetworkDiscovery.StopBroadcast();
+        //NetworkDiscovery.StopBroadcast();
         //
-        ShowConnectionPanel(false);
+        //ShowConnectionPanel(false);
     }
 
     private IEnumerator JoinHost()
@@ -264,5 +317,29 @@ public class NetworkManager_NetworkController : NetworkManager
     {
         NetworkManager.singleton.networkPort = Convert.ToInt32(PortInput.text);
 
+    }
+}
+
+public class RegisterHostMessage : MessageBase
+{
+    public string gameName;
+    public string comment;
+    public bool passwordProtected;
+}
+
+public class MasterClient
+{
+    public NetworkClient client;
+
+    public const short RegisterHostMsgId = 888;
+
+    public void RegisterHost(string name)
+    {
+        RegisterHostMessage msg = new RegisterHostMessage();
+        msg.gameName = name;
+        msg.comment = "test";
+        msg.passwordProtected = false;
+
+        client.Send(RegisterHostMsgId, msg);
     }
 }
